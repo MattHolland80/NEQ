@@ -5,54 +5,182 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Inventory NEQ Calculator</title>
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 24px; }
-    h1 { margin-bottom: 8px; }
-    table { border-collapse: collapse; width: 100%; max-width: 900px; margin-top: 12px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background: #111827; color: white; font-size: 14px; }
-    input[type="number"] { width: 100px; padding: 6px; font-size: 14px; }
-    .right { text-align: right; }
-    tfoot td { font-weight: 700; background: #f3f4f6; }
-    .controls { margin-top: 12px; gap: 8px; display:flex; flex-wrap:wrap; }
-    button { padding: 8px 12px; font-size: 14px; cursor: pointer; }
-    .small { font-size: 13px; color: #555; margin-top: 6px;}
-    .row-result { text-align: right; min-width:90px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f2f2f7;
+      color: #111;
+    }
+    header {
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid #ccc;
+      text-align: center;
+      font-weight: 600;
+      font-size: 18px;
+    }
+    main {
+      padding: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px 14px;
+      font-size: 15px;
+    }
+    thead th {
+      background: #f9f9fb;
+      font-weight: 600;
+      border-bottom: 1px solid #e5e5ea;
+      cursor: pointer;
+      user-select: none;
+      text-align: left;
+    }
+    tbody tr:not(:last-child) td {
+      border-bottom: 1px solid #e5e5ea;
+    }
+    input[type="number"] {
+      width: 80px;
+      padding: 6px 8px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      text-align: right;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #fff;
+      color: #111;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #007aff;
+      box-shadow: 0 0 0 2px rgba(0,122,255,0.2);
+    }
+    .right {
+      text-align: right;
+    }
+    tfoot td {
+      font-weight: 600;
+      background: #f9f9fb;
+      border-top: 1px solid #e5e5ea;
+    }
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    button {
+      background: #007aff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:active {
+      background: #005bb5;
+    }
+    .small {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .row-result {
+      text-align: right;
+      min-width: 90px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* --- DARK MODE --- */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #000;
+        color: #f2f2f7;
+      }
+      header {
+        background: #1c1c1e;
+        border-bottom: 1px solid #2c2c2e;
+        color: #f2f2f7;
+      }
+      table {
+        background: #1c1c1e;
+        box-shadow: none;
+      }
+      thead th {
+        background: #2c2c2e;
+        border-bottom: 1px solid #3a3a3c;
+        color: #f2f2f7;
+      }
+      tbody tr:not(:last-child) td {
+        border-bottom: 1px solid #3a3a3c;
+      }
+      tfoot td {
+        background: #2c2c2e;
+        border-top: 1px solid #3a3a3c;
+        color: #f2f2f7;
+      }
+      input[type="number"] {
+        background: #2c2c2e;
+        border: 1px solid #3a3a3c;
+        color: #f2f2f7;
+      }
+      input[type="number"]:focus {
+        border-color: #0a84ff;
+        box-shadow: 0 0 0 2px rgba(10,132,255,0.3);
+      }
+      button {
+        background: #0a84ff;
+      }
+      button:active {
+        background: #0060df;
+      }
+      .small {
+        color: #aaa;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Inventory NEQ Calculator</h1>
-  <p class="small">Enter the quantity you have for each product. The row NEQ and overall NEQ sum update automatically.</p>
+  <header>Inventory NEQ Calculator</header>
+  <main>
+    <p class="small">Enter the quantity for each product. Totals update automatically. Tap on <b>Product Description</b> to sort.</p>
 
-  <table id="inventoryTable" aria-label="Inventory NEQ table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Product Description</th>
-        <th class="right">NEQ Per Selling Unit</th>
-        <th class="right">Quantity Held</th>
-        <th class="right">Row NEQ (NEQ × Qty)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- rows populated by script -->
-    </tbody>
-    <tfoot>
-      <tr>
-        <td colspan="4" class="right">Overall NEQ Total</td>
-        <td id="overallNEQ" class="row-result">0.000</td>
-      </tr>
-    </tfoot>
-  </table>
+    <table id="inventoryTable" aria-label="Inventory NEQ table">
+      <thead>
+        <tr>
+          <th data-sort="name">Product Description ⬍</th>
+          <th class="right">NEQ Per Unit</th>
+          <th class="right">Quantity</th>
+          <th class="right">Row NEQ</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" class="right">Overall NEQ Total</td>
+          <td id="overallNEQ" class="row-result">0.000</td>
+        </tr>
+      </tfoot>
+    </table>
 
-  <div class="controls">
-    <button id="resetBtn" type="button">Reset Quantities</button>
-    <button id="exportBtn" type="button">Export CSV</button>
-    <div style="flex:1"></div>
-    <div class="small">Row NEQ values are rounded to 3 decimals for display but the calculation uses full precision.</div>
-  </div>
+    <div class="controls">
+      <button id="resetBtn" type="button">Reset</button>
+    </div>
+  </main>
 
   <script>
-    // Data from the user
     const products = [
       { name: "Titanium", neq: 0.022 },
       { name: "Star Wand", neq: 0.024 },
@@ -77,111 +205,93 @@
     const tbody = document.querySelector("#inventoryTable tbody");
     const overallNEQEl = document.getElementById("overallNEQ");
 
-    // Helper: format numbers to 3 decimal places for display
     function fmt(n) {
       return Number(n).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
     }
 
-    // Build rows
-    products.forEach((p, idx) => {
-      const tr = document.createElement("tr");
+    function buildRows(list) {
+      tbody.innerHTML = "";
+      list.forEach(p => {
+        const tr = document.createElement("tr");
 
-      const tdIndex = document.createElement("td");
-      tdIndex.textContent = idx + 1;
+        const tdName = document.createElement("td");
+        tdName.textContent = p.name;
 
-      const tdName = document.createElement("td");
-      tdName.textContent = p.name;
+        const tdNEQ = document.createElement("td");
+        tdNEQ.className = "right";
+        tdNEQ.textContent = p.neq;
 
-      const tdNEQ = document.createElement("td");
-      tdNEQ.className = "right";
-      tdNEQ.textContent = p.neq;
+        const tdQty = document.createElement("td");
+        tdQty.className = "right";
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.step = "1";
+        input.value = p.qty || "0";
+        input.dataset.neq = String(p.neq);
+        tdQty.appendChild(input);
 
-      const tdQty = document.createElement("td");
-      tdQty.className = "right";
-      const input = document.createElement("input");
-      input.type = "number";
-      input.min = "0";
-      input.step = "1";
-      input.value = "0";
-      input.setAttribute("aria-label", p.name + " quantity held");
-      // store the NEQ value on the input for easy access
-      input.dataset.neq = String(p.neq);
-      tdQty.appendChild(input);
+        const tdRowNEQ = document.createElement("td");
+        tdRowNEQ.className = "row-result";
+        tdRowNEQ.textContent = "0.000";
 
-      const tdRowNEQ = document.createElement("td");
-      tdRowNEQ.className = "row-result";
-      tdRowNEQ.textContent = "0.000";
+        tr.appendChild(tdName);
+        tr.appendChild(tdNEQ);
+        tr.appendChild(tdQty);
+        tr.appendChild(tdRowNEQ);
+        tbody.appendChild(tr);
+      });
+      attachListeners();
+      recalc();
+    }
 
-      tr.appendChild(tdIndex);
-      tr.appendChild(tdName);
-      tr.appendChild(tdNEQ);
-      tr.appendChild(tdQty);
-      tr.appendChild(tdRowNEQ);
-      tbody.appendChild(tr);
-    });
-
-    // Recalculate function
     function recalc() {
       let total = 0;
-      const rows = tbody.querySelectorAll("tr");
-      rows.forEach(row => {
+      tbody.querySelectorAll("tr").forEach(row => {
         const input = row.querySelector("input[type='number']");
         const neq = parseFloat(input.dataset.neq) || 0;
         const qty = parseFloat(input.value) || 0;
         const rowTotal = neq * qty;
         total += rowTotal;
-        const rowCell = row.querySelector("td.row-result") || row.lastElementChild;
-        rowCell.textContent = fmt(rowTotal);
+        row.querySelector("td.row-result").textContent = fmt(rowTotal);
       });
       overallNEQEl.textContent = fmt(total);
     }
 
-    // Attach listeners to inputs
-    tbody.querySelectorAll("input[type='number']").forEach(inp => {
-      inp.addEventListener("input", () => {
-        // ensure non-negative integer (quantity)
-        if (inp.value === "") { inp.value = 0; }
-        if (Number(inp.value) < 0) inp.value = 0;
-        // keep integer quantities but allow decimal values if user wants (step=1 default)
-        recalc();
+    function attachListeners() {
+      tbody.querySelectorAll("input[type='number']").forEach(inp => {
+        inp.addEventListener("input", () => {
+          if (inp.value === "") inp.value = 0;
+          if (Number(inp.value) < 0) inp.value = 0;
+          recalc();
+        });
+        inp.addEventListener("blur", recalc);
       });
-      // recalc on blur in case of manual edits
-      inp.addEventListener("blur", recalc);
-    });
+    }
 
-    // Reset button
     document.getElementById("resetBtn").addEventListener("click", () => {
       tbody.querySelectorAll("input[type='number']").forEach(i => i.value = 0);
       recalc();
     });
 
-    // Export CSV
-    document.getElementById("exportBtn").addEventListener("click", () => {
-      const rows = [["Product Description", "NEQ Per Selling Unit", "Quantity Held", "Row NEQ"]];
-      tbody.querySelectorAll("tr").forEach(row => {
-        const name = row.children[1].textContent;
-        const neq = row.children[2].textContent;
-        const qty = row.querySelector("input").value || "0";
-        const rowNEQ = row.querySelector("td.row-result").textContent || "0.000";
-        rows.push([name, neq, qty, rowNEQ]);
+    let sortAsc = true;
+    document.querySelector("th[data-sort='name']").addEventListener("click", () => {
+      products.sort((a, b) => {
+        if (a.name < b.name) return sortAsc ? -1 : 1;
+        if (a.name > b.name) return sortAsc ? 1 : -1;
+        return 0;
       });
-      rows.push(["Overall", "", "", overallNEQEl.textContent]);
-
-      // Convert to CSV string
-      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "inventory_neq_export.csv";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      sortAsc = !sortAsc;
+      tbody.querySelectorAll("tr").forEach(row => {
+        const name = row.children[0].textContent;
+        const qty = row.querySelector("input").value;
+        const prod = products.find(p => p.name === name);
+        if (prod) prod.qty = qty;
+      });
+      buildRows(products);
     });
 
-    // initial calc
-    recalc();
+    buildRows(products);
   </script>
 </body>
 </html>
