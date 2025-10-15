@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inventory NEQ Calculator</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 24px; }
+    h1 { margin-bottom: 8px; }
+    table { border-collapse: collapse; width: 100%; max-width: 900px; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #111827; color: white; font-size: 14px; }
+    input[type="number"] { width: 100px; padding: 6px; font-size: 14px; }
+    .right { text-align: right; }
+    tfoot td { font-weight: 700; background: #f3f4f6; }
+    .controls { margin-top: 12px; gap: 8px; display:flex; flex-wrap:wrap; }
+    button { padding: 8px 12px; font-size: 14px; cursor: pointer; }
+    .small { font-size: 13px; color: #555; margin-top: 6px;}
+    .row-result { text-align: right; min-width:90px; }
+  </style>
+</head>
+<body>
+  <h1>Inventory NEQ Calculator</h1>
+  <p class="small">Enter the quantity you have for each product. The row NEQ and overall NEQ sum update automatically.</p>
+
+  <table id="inventoryTable" aria-label="Inventory NEQ table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Product Description</th>
+        <th class="right">NEQ Per Selling Unit</th>
+        <th class="right">Quantity Held</th>
+        <th class="right">Row NEQ (NEQ × Qty)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- rows populated by script -->
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="4" class="right">Overall NEQ Total</td>
+        <td id="overallNEQ" class="row-result">0.000</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="controls">
+    <button id="resetBtn" type="button">Reset Quantities</button>
+    <button id="exportBtn" type="button">Export CSV</button>
+    <div style="flex:1"></div>
+    <div class="small">Row NEQ values are rounded to 3 decimals for display but the calculation uses full precision.</div>
+  </div>
+
+  <script>
+    // Data from the user
+    const products = [
+      { name: "Titanium", neq: 0.022 },
+      { name: "Star Wand", neq: 0.024 },
+      { name: "Elements", neq: 0.064 },
+      { name: "Rainbow", neq: 0.060 },
+      { name: "Astro", neq: 0.060 },
+      { name: "Supernova", neq: 0.085 },
+      { name: "Enchanted", neq: 0.150 },
+      { name: "Ilusion", neq: 0.100 },
+      { name: "Stargazer", neq: 0.211 },
+      { name: "Lunar", neq: 0.152 },
+      { name: "Hypersonic", neq: 0.228 },
+      { name: "Sky Party", neq: 0.293 },
+      { name: "Fiesta", neq: 0.210 },
+      { name: "Bright Lights", neq: 0.416 },
+      { name: "Grand Finale", neq: 0.630 },
+      { name: "High Impact", neq: 1.113 },
+      { name: "Shockwave", neq: 0.669 },
+      { name: "Powerforce", neq: 1.558 }
+    ];
+
+    const tbody = document.querySelector("#inventoryTable tbody");
+    const overallNEQEl = document.getElementById("overallNEQ");
+
+    // Helper: format numbers to 3 decimal places for display
+    function fmt(n) {
+      return Number(n).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+    }
+
+    // Build rows
+    products.forEach((p, idx) => {
+      const tr = document.createElement("tr");
+
+      const tdIndex = document.createElement("td");
+      tdIndex.textContent = idx + 1;
+
+      const tdName = document.createElement("td");
+      tdName.textContent = p.name;
+
+      const tdNEQ = document.createElement("td");
+      tdNEQ.className = "right";
+      tdNEQ.textContent = p.neq;
+
+      const tdQty = document.createElement("td");
+      tdQty.className = "right";
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = "0";
+      input.step = "1";
+      input.value = "0";
+      input.setAttribute("aria-label", p.name + " quantity held");
+      // store the NEQ value on the input for easy access
+      input.dataset.neq = String(p.neq);
+      tdQty.appendChild(input);
+
+      const tdRowNEQ = document.createElement("td");
+      tdRowNEQ.className = "row-result";
+      tdRowNEQ.textContent = "0.000";
+
+      tr.appendChild(tdIndex);
+      tr.appendChild(tdName);
+      tr.appendChild(tdNEQ);
+      tr.appendChild(tdQty);
+      tr.appendChild(tdRowNEQ);
+      tbody.appendChild(tr);
+    });
+
+    // Recalculate function
+    function recalc() {
+      let total = 0;
+      const rows = tbody.querySelectorAll("tr");
+      rows.forEach(row => {
+        const input = row.querySelector("input[type='number']");
+        const neq = parseFloat(input.dataset.neq) || 0;
+        const qty = parseFloat(input.value) || 0;
+        const rowTotal = neq * qty;
+        total += rowTotal;
+        const rowCell = row.querySelector("td.row-result") || row.lastElementChild;
+        rowCell.textContent = fmt(rowTotal);
+      });
+      overallNEQEl.textContent = fmt(total);
+    }
+
+    // Attach listeners to inputs
+    tbody.querySelectorAll("input[type='number']").forEach(inp => {
+      inp.addEventListener("input", () => {
+        // ensure non-negative integer (quantity)
+        if (inp.value === "") { inp.value = 0; }
+        if (Number(inp.value) < 0) inp.value = 0;
+        // keep integer quantities but allow decimal values if user wants (step=1 default)
+        recalc();
+      });
+      // recalc on blur in case of manual edits
+      inp.addEventListener("blur", recalc);
+    });
+
+    // Reset button
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      tbody.querySelectorAll("input[type='number']").forEach(i => i.value = 0);
+      recalc();
+    });
+
+    // Export CSV
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const rows = [["Product Description", "NEQ Per Selling Unit", "Quantity Held", "Row NEQ"]];
+      tbody.querySelectorAll("tr").forEach(row => {
+        const name = row.children[1].textContent;
+        const neq = row.children[2].textContent;
+        const qty = row.querySelector("input").value || "0";
+        const rowNEQ = row.querySelector("td.row-result").textContent || "0.000";
+        rows.push([name, neq, qty, rowNEQ]);
+      });
+      rows.push(["Overall", "", "", overallNEQEl.textContent]);
+
+      // Convert to CSV string
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "inventory_neq_export.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // initial calc
+    recalc();
+  </script>
+</body>
+</html>
