@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<mta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fireworks NEQ Calculator</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f4f4;
+}
+
+header{
+    background:#00539f;
+    color:white;
+    padding:15px;
+    text-align:center;
+}
+
+.tabs{
+    display:flex;
+}
+
+.tab{
+    flex:1;
+    padding:15px;
+    border:none;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.active{
+    background:#00539f;
+    color:white;
+}
+
+.inactive{
+    background:#ddd;
+}
+
+.container{
+    padding:12px;
+}
+
+.card{
+    background:white;
+    margin-bottom:8px;
+    padding:12px;
+    border-radius:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.product-info{
+    max-width:70%;
+}
+
+.product-name{
+    font-weight:bold;
+}
+
+.neq{
+    color:#666;
+    font-size:13px;
+}
+
+.qty{
+    width:70px;
+    padding:8px;
+    text-align:center;
+    font-size:16px;
+}
+
+.summary{
+    position:sticky;
+    bottom:0;
+    background:white;
+    padding:15px;
+    border-top:2px solid #ccc;
+}
+
+.total{
+    font-size:28px;
+    font-weight:bold;
+}
+
+.green{
+    color:green;
+}
+
+.orange{
+    color:orange;
+}
+
+.red{
+    color:red;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h2>Fireworks NEQ Calculator</h2>
+</header>
+
+<div class="tabs">
+<button id="tab1" class="tab active">Cabinet One</button>
+<button id="tab2" class="tab inactive">Cabinet Two</button>
+</div>
+
+<div class="container" id="products"></div>
+
+<div class="summary">
+    <div>Total NEQ</div>
+    <div id="total" class="total">0.000 kg</div>
+
+    <div id="remaining"></div>
+</div>
+
+<script>
+
+const LIMIT = 12.5;
+
+const cabinets = {
+
+cabinet1: [
+
+{name:"Titanium",neq:0.022},
+{name:"Magic Wands",neq:0.036},
+{name:"Elements",neq:0.064},
+{name:"Cosmic Whisper",neq:0.078},
+{name:"Rainbow",neq:0.060},
+{name:"Astro",neq:0.060},
+{name:"Supernova",neq:0.085},
+{name:"Enchanted",neq:0.150},
+{name:"Illusion",neq:0.100},
+{name:"Stargazer",neq:0.211},
+{name:"Lunar",neq:0.152},
+{name:"Hypersonic",neq:0.228},
+{name:"Sky Party",neq:0.293},
+{name:"Fiesta",neq:0.210},
+{name:"Bright Lights",neq:0.416},
+{name:"Grand Finale",neq:0.630},
+{name:"High Impact",neq:1.113},
+{name:"Shockwave",neq:0.669},
+{name:"Powerforce",neq:1.558}
+
+],
+
+cabinet2: [
+
+{name:"Titanium",neq:0.022},
+{name:"Magic Wands",neq:0.036},
+{name:"Elements",neq:0.064},
+{name:"Cosmic Whisper",neq:0.078},
+{name:"Rainbow",neq:0.060},
+{name:"Astro",neq:0.060},
+{name:"Supernova",neq:0.085},
+{name:"Enchanted",neq:0.150},
+{name:"Illusion",neq:0.100},
+{name:"Stargazer",neq:0.211},
+{name:"Lunar",neq:0.152},
+{name:"Hypersonic",neq:0.228},
+{name:"Sky Party",neq:0.293},
+{name:"Fiesta",neq:0.210},
+{name:"Bright Lights",neq:0.416},
+{name:"Grand Finale",neq:0.630},
+{name:"High Impact",neq:1.113},
+{name:"Shockwave",neq:0.669},
+{name:"Powerforce",neq:1.558}
+
+]
+
+};
+
+let currentCabinet = "cabinet1";
+
+function loadProducts(){
+
+    const container =
+        document.getElementById("products");
+
+    container.innerHTML = "";
+
+    cabinets[currentCabinet].forEach(
+        (item,index)=>{
+
+        const saved =
+            localStorage.getItem(
+              currentCabinet+"_"+index
+            ) || 0;
+
+        const card =
+          document.createElement("div");
+
+        card.className="card";
+
+        card.innerHTML = `
+            <div class="product-info">
+                <div class="product-name">
+                    ${item.name}
+                </div>
+                <div class="neq">
+                    NEQ ${item.neq}
+                </div>
+            </div>
+
+            <input
+               class="qty"
+               type="number"
+               min="0"
+               value="${saved}"
+               onchange="updateQty(${index},this.value)"
+            >
+        `;
+
+        container.appendChild(card);
+
+    });
+
+    calculate();
+
+}
+
+function updateQty(index,value){
+
+    localStorage.setItem(
+       currentCabinet+"_"+index,
+       value
+    );
+
+    calculate();
+
+}
+
+function calculate(){
+
+    let total = 0;
+
+    cabinets[currentCabinet].forEach(
+      (item,index)=>{
+
+      let qty =
+      parseFloat(
+      localStorage.getItem(
+      currentCabinet+"_"+index
+      )) || 0;
+
+      total += qty * item.neq;
+
+    });
+
+    document.getElementById("total")
+      .innerText =
+      total.toFixed(3)+" kg";
+
+    const remaining =
+      LIMIT - total;
+
+    const rm =
+      document.getElementById("remaining");
+
+    rm.className="";
+
+    if(total < 10){
+
+      rm.classList.add("green");
+
+    }else if(total <= 12.5){
+
+      rm.classList.add("orange");
+
+    }else{
+
+      rm.classList.add("red");
+
+    }
+
+    rm.innerHTML =
+    `
+    Remaining Capacity:
+    ${remaining.toFixed(3)} kg
+    `;
+}
+
+document
+.getElementById("tab1")
+.addEventListener("click",()=>{
+
+    currentCabinet="cabinet1";
+
+    document
+       .getElementById("tab1")
+       .className="tab active";
+
+    document
+       .getElementById("tab2")
+       .className="tab inactive";
+
+    loadProducts();
+});
+
+document
+.getElementById("tab2")
+.addEventListener("click",()=>{
+
+    currentCabinet="cabinet2";
+
+    document
+       .getElementById("tab2")
+       .className="tab active";
+
+    document
+       .getElementById("tab1")
+       .className="tab inactive";
+
+    loadProducts();
+});
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
