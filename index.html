@@ -236,4 +236,180 @@ function getCabinetName() {
         : "Squat Cabinet";
 }
 
-function loadProducts
+function loadProducts(){
+
+    const container =
+        document.getElementById("products");
+
+    container.innerHTML = "";
+
+    cabinets[currentCabinet].forEach((item,index)=>{
+
+        const saved =
+            localStorage.getItem(
+                currentCabinet + "_" + index
+            ) || 0;
+
+        const card =
+            document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML = `
+            <div class="product-info">
+                <div class="product-name">
+                    ${item.name}
+                </div>
+
+                <div class="neq">
+                    NEQ Per Unit: ${item.neq} kg
+                </div>
+            </div>
+
+            <input
+                class="qty"
+                type="number"
+                min="0"
+                value="${saved}"
+                onchange="updateQty(${index},this.value)">
+        `;
+
+        container.appendChild(card);
+    });
+
+    calculate();
+}
+
+function updateQty(index,value){
+
+    localStorage.setItem(
+        currentCabinet + "_" + index,
+        value
+    );
+
+    calculate();
+}
+
+function calculate(){
+
+    let total = 0;
+
+    cabinets[currentCabinet].forEach((item,index)=>{
+
+        const qty =
+            parseFloat(
+                localStorage.getItem(
+                    currentCabinet + "_" + index
+                )
+            ) || 0;
+
+        total += qty * item.neq;
+    });
+
+    const limit =
+        LIMITS[currentCabinet];
+
+    const remaining =
+        limit - total;
+
+    document.getElementById("total")
+        .innerText =
+        total.toFixed(3) + " kg";
+
+    const panel =
+        document.getElementById("remaining");
+
+    panel.className = "";
+
+    if(total < limit * 0.8){
+        panel.classList.add("green");
+    }
+    else if(total <= limit){
+        panel.classList.add("orange");
+    }
+    else{
+        panel.classList.add("red");
+    }
+
+    let html = `
+        <strong>${getCabinetName()}</strong><br>
+        Cabinet Limit: ${limit.toFixed(1)} kg<br>
+        Current NEQ: ${total.toFixed(3)} kg<br>
+        Remaining Capacity: ${remaining.toFixed(3)} kg
+    `;
+
+    if(total > limit){
+
+        html += `
+            <div class="warning">
+                OVER CAPACITY BY
+                ${(total-limit).toFixed(3)} kg
+            </div>
+        `;
+    }
+
+    panel.innerHTML = html;
+}
+
+document
+.getElementById("tab1")
+.addEventListener("click",()=>{
+
+    currentCabinet = "cabinet1";
+
+    document
+        .getElementById("tab1")
+        .className = "tab active";
+
+    document
+        .getElementById("tab2")
+        .className = "tab inactive";
+
+    loadProducts();
+});
+
+document
+.getElementById("tab2")
+.addEventListener("click",()=>{
+
+    currentCabinet = "cabinet2";
+
+    document
+        .getElementById("tab2")
+        .className = "tab active";
+
+    document
+        .getElementById("tab1")
+        .className = "tab inactive";
+
+    loadProducts();
+});
+
+document
+.getElementById("resetBtn")
+.addEventListener("click",()=>{
+
+    const cabinetName = getCabinetName();
+
+    if(!confirm(
+        `Reset all quantities for ${cabinetName}?`
+    )){
+        return;
+    }
+
+    cabinets[currentCabinet].forEach((item,index)=>{
+
+        localStorage.removeItem(
+            currentCabinet + "_" + index
+        );
+    });
+
+    loadProducts();
+});
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
