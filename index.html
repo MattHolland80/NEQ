@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<mta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fireworks NEQ Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Fireworks Cabinet NEQ Calculator</title>
 
 <style>
+
 *{
     box-sizing:border-box;
     margin:0;
@@ -15,13 +17,16 @@
 body{
     font-family:Arial,sans-serif;
     background:#f4f4f4;
+    font-size:22px;
 }
 
 header{
     background:#00539f;
     color:white;
-    padding:15px;
     text-align:center;
+    padding:20px;
+    font-size:32px;
+    font-weight:bold;
 }
 
 .tabs{
@@ -30,9 +35,10 @@ header{
 
 .tab{
     flex:1;
-    padding:15px;
+    padding:20px;
     border:none;
-    font-size:16px;
+    font-size:24px;
+    font-weight:bold;
     cursor:pointer;
 }
 
@@ -42,21 +48,24 @@ header{
 }
 
 .inactive{
-    background:#ddd;
+    background:#d9d9d9;
+    color:black;
 }
 
 .container{
     padding:12px;
+    padding-bottom:180px;
 }
 
 .card{
     background:white;
-    margin-bottom:8px;
-    padding:12px;
-    border-radius:8px;
+    margin-bottom:12px;
+    padding:18px;
+    border-radius:12px;
     display:flex;
     justify-content:space-between;
     align-items:center;
+    box-shadow:0 2px 5px rgba(0,0,0,.08);
 }
 
 .product-info{
@@ -64,122 +73,151 @@ header{
 }
 
 .product-name{
-    font-weight:bold;
-}
-
-.neq{
-    color:#666;
-    font-size:13px;
-}
-
-.qty{
-    width:70px;
-    padding:8px;
-    text-align:center;
-    font-size:16px;
-}
-
-.summary{
-    position:sticky;
-    bottom:0;
-    background:white;
-    padding:15px;
-    border-top:2px solid #ccc;
-}
-
-.total{
     font-size:28px;
     font-weight:bold;
 }
 
+.neq{
+    font-size:18px;
+    color:#666;
+    margin-top:5px;
+}
+
+.qty{
+    width:120px;
+    height:70px;
+    font-size:28px;
+    font-weight:bold;
+    text-align:center;
+    border:2px solid #ccc;
+    border-radius:10px;
+}
+
+.reset-wrapper{
+    padding:12px;
+}
+
+.reset-btn{
+    width:100%;
+    padding:16px;
+    background:#d32f2f;
+    color:white;
+    border:none;
+    border-radius:10px;
+    font-size:22px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.summary{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    background:white;
+    border-top:3px solid #ccc;
+    padding:15px;
+    box-shadow:0 -2px 8px rgba(0,0,0,0.15);
+}
+
+.total{
+    font-size:52px;
+    font-weight:bold;
+}
+
 .green{
-    color:green;
+    color:#2e7d32;
 }
 
 .orange{
-    color:orange;
+    color:#ef6c00;
 }
 
 .red{
-    color:red;
+    color:#c62828;
 }
+
+#remaining{
+    margin-top:8px;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.warning{
+    margin-top:10px;
+    background:#ffdddd;
+    color:#b00020;
+    padding:12px;
+    border-radius:8px;
+    font-weight:bold;
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-    <h2>Fireworks NEQ Calculator</h2>
+Fireworks Cabinet NEQ Calculator
 </header>
 
 <div class="tabs">
-<button id="tab1" class="tab active">Cabinet One</button>
-<button id="tab2" class="tab inactive">Cabinet Two</button>
+    <button id="tab1" class="tab active">Cabinet One (25kg)</button>
+    <button id="tab2" class="tab inactive">Cabinet Two (12.5kg)</button>
 </div>
 
 <div class="container" id="products"></div>
 
+<div class="reset-wrapper">
+    <button id="resetBtn" class="reset-btn">
+        Reset Current Cabinet
+    </button>
+</div>
+
 <div class="summary">
+
     <div>Total NEQ</div>
-    <div id="total" class="total">0.000 kg</div>
+
+    <div id="total" class="total">
+        0.000 kg
+    </div>
 
     <div id="remaining"></div>
+
 </div>
 
 <script>
 
-const LIMIT = 12.5;
+const LIMITS = {
+    cabinet1: 25.0,
+    cabinet2: 12.5
+};
+
+const products = [
+{name:"Astro",neq:0.060},
+{name:"Bright Lights",neq:0.416},
+{name:"Cosmic Whisper",neq:0.078},
+{name:"Elements",neq:0.064},
+{name:"Enchanted",neq:0.150},
+{name:"Fiesta",neq:0.210},
+{name:"Grand Finale",neq:0.630},
+{name:"High Impact",neq:1.113},
+{name:"Hypersonic",neq:0.228},
+{name:"Illusion",neq:0.100},
+{name:"Lunar",neq:0.152},
+{name:"Magic Wands",neq:0.036},
+{name:"Powerforce",neq:1.558},
+{name:"Rainbow",neq:0.060},
+{name:"Shockwave",neq:0.669},
+{name:"Sky Party",neq:0.293},
+{name:"Stargazer",neq:0.211},
+{name:"Supernova",neq:0.085},
+{name:"Titanium",neq:0.022}
+].sort((a,b)=>a.name.localeCompare(b.name));
 
 const cabinets = {
-
-cabinet1: [
-
-{name:"Titanium",neq:0.022},
-{name:"Magic Wands",neq:0.036},
-{name:"Elements",neq:0.064},
-{name:"Cosmic Whisper",neq:0.078},
-{name:"Rainbow",neq:0.060},
-{name:"Astro",neq:0.060},
-{name:"Supernova",neq:0.085},
-{name:"Enchanted",neq:0.150},
-{name:"Illusion",neq:0.100},
-{name:"Stargazer",neq:0.211},
-{name:"Lunar",neq:0.152},
-{name:"Hypersonic",neq:0.228},
-{name:"Sky Party",neq:0.293},
-{name:"Fiesta",neq:0.210},
-{name:"Bright Lights",neq:0.416},
-{name:"Grand Finale",neq:0.630},
-{name:"High Impact",neq:1.113},
-{name:"Shockwave",neq:0.669},
-{name:"Powerforce",neq:1.558}
-
-],
-
-cabinet2: [
-
-{name:"Titanium",neq:0.022},
-{name:"Magic Wands",neq:0.036},
-{name:"Elements",neq:0.064},
-{name:"Cosmic Whisper",neq:0.078},
-{name:"Rainbow",neq:0.060},
-{name:"Astro",neq:0.060},
-{name:"Supernova",neq:0.085},
-{name:"Enchanted",neq:0.150},
-{name:"Illusion",neq:0.100},
-{name:"Stargazer",neq:0.211},
-{name:"Lunar",neq:0.152},
-{name:"Hypersonic",neq:0.228},
-{name:"Sky Party",neq:0.293},
-{name:"Fiesta",neq:0.210},
-{name:"Bright Lights",neq:0.416},
-{name:"Grand Finale",neq:0.630},
-{name:"High Impact",neq:1.113},
-{name:"Shockwave",neq:0.669},
-{name:"Powerforce",neq:1.558}
-
-]
-
+    cabinet1:[...products],
+    cabinet2:[...products]
 };
 
 let currentCabinet = "cabinet1";
@@ -196,13 +234,13 @@ function loadProducts(){
 
         const saved =
             localStorage.getItem(
-              currentCabinet+"_"+index
+                currentCabinet + "_" + index
             ) || 0;
 
         const card =
-          document.createElement("div");
+            document.createElement("div");
 
-        card.className="card";
+        card.className = "card";
 
         card.innerHTML = `
             <div class="product-info">
@@ -210,36 +248,33 @@ function loadProducts(){
                     ${item.name}
                 </div>
                 <div class="neq">
-                    NEQ ${item.neq}
+                    NEQ Per Unit: ${item.neq}kg
                 </div>
             </div>
 
             <input
-               class="qty"
-               type="number"
-               min="0"
-               value="${saved}"
-               onchange="updateQty(${index},this.value)"
+                class="qty"
+                type="number"
+                min="0"
+                value="${saved}"
+                onchange="updateQty(${index},this.value)"
             >
         `;
 
         container.appendChild(card);
-
     });
 
     calculate();
-
 }
 
 function updateQty(index,value){
 
     localStorage.setItem(
-       currentCabinet+"_"+index,
-       value
+        currentCabinet + "_" + index,
+        value
     );
 
     calculate();
-
 }
 
 function calculate(){
@@ -247,64 +282,73 @@ function calculate(){
     let total = 0;
 
     cabinets[currentCabinet].forEach(
-      (item,index)=>{
+        (item,index)=>{
 
-      let qty =
-      parseFloat(
-      localStorage.getItem(
-      currentCabinet+"_"+index
-      )) || 0;
+        const qty =
+            parseFloat(
+                localStorage.getItem(
+                    currentCabinet + "_" + index
+                )
+            ) || 0;
 
-      total += qty * item.neq;
-
+        total += qty * item.neq;
     });
 
-    document.getElementById("total")
-      .innerText =
-      total.toFixed(3)+" kg";
+    const limit =
+        LIMITS[currentCabinet];
 
     const remaining =
-      LIMIT - total;
+        limit - total;
 
-    const rm =
-      document.getElementById("remaining");
+    document.getElementById("total")
+        .innerText =
+        total.toFixed(3) + " kg";
 
-    rm.className="";
+    const panel =
+        document.getElementById("remaining");
 
-    if(total < 10){
+    panel.className = "";
 
-      rm.classList.add("green");
-
-    }else if(total <= 12.5){
-
-      rm.classList.add("orange");
-
-    }else{
-
-      rm.classList.add("red");
-
+    if(total < limit * 0.8){
+        panel.classList.add("green");
+    }
+    else if(total <= limit){
+        panel.classList.add("orange");
+    }
+    else{
+        panel.classList.add("red");
     }
 
-    rm.innerHTML =
-    `
-    Remaining Capacity:
-    ${remaining.toFixed(3)} kg
+    let html = `
+        Cabinet Limit: ${limit.toFixed(1)} kg<br>
+        Current NEQ: ${total.toFixed(3)} kg<br>
+        Remaining Capacity:
+        ${remaining.toFixed(3)} kg
     `;
+
+    if(total > limit){
+
+        html += `
+        <div class="warning">
+            OVER CAPACITY BY
+            ${(total-limit).toFixed(3)} kg
+        </div>`;
+    }
+
+    panel.innerHTML = html;
 }
 
 document
 .getElementById("tab1")
 .addEventListener("click",()=>{
 
-    currentCabinet="cabinet1";
+    currentCabinet = "cabinet1";
 
-    document
-       .getElementById("tab1")
-       .className="tab active";
+    document.getElementById("tab1")
+        .className = "tab active";
 
-    document
-       .getElementById("tab2")
-       .className="tab inactive";
+    document.getElementById("tab2")
+        .className = "tab inactive";
 
     loadProducts();
 });
@@ -313,15 +357,34 @@ document
 .getElementById("tab2")
 .addEventListener("click",()=>{
 
-    currentCabinet="cabinet2";
+    currentCabinet = "cabinet2";
 
-    document
-       .getElementById("tab2")
-       .className="tab active";
+    document.getElementById("tab2")
+        .className = "tab active";
 
-    document
-       .getElementById("tab1")
-       .className="tab inactive";
+    document.getElementById("tab1")
+        .className = "tab inactive";
+
+    loadProducts();
+});
+
+document
+.getElementById("resetBtn")
+.addEventListener("click",()=>{
+
+    if(!confirm(
+        "Reset all quantities for this cabinet?"
+    )){
+        return;
+    }
+
+    cabinets[currentCabinet].forEach(
+        (item,index)=>{
+
+        localStorage.removeItem(
+            currentCabinet + "_" + index
+        );
+    });
 
     loadProducts();
 });
